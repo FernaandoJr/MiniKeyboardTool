@@ -1,0 +1,41 @@
+# Catches regressions that only surface in Debug configuration (untested
+# code paths, DEBUG-only defines) — the release CI covers Release only.
+
+name: debug-build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "reference/**"
+      - "verify/**"
+  workflow_dispatch:
+
+jobs:
+  debug:
+    name: Build (x86, net40) Debug config
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x86
+
+      - name: Build (Debug)
+        run: >
+          msbuild "src\HIDTester\MINI KeyBoard.csproj"
+          /p:Configuration=Debug /t:Rebuild /m
+          /v:m /nologo /p:WarningLevel=4
+          "/p:FrameworkPathOverride=C:\Windows\Microsoft.NET\Framework64\v4.0.30319"
+
+      - name: Report warnings
+        shell: pwsh
+        run: |
+          # nonzero level visibility for new warnings, but do not gate merges here.
+          Get-ChildItem "src\HIDTester\obj" -Recurse -Filter *.log -ErrorAction SilentlyContinue | Out-Null
+          Write-Host "Debug build succeeded (release fidelity CI remains the merge gate)."
