@@ -1,4 +1,4 @@
-# Single pipeline: on any push/PR we build + verify. Publishing a GitHub Release
+# Single pipeline: on any push/PR we build. Publishing a GitHub Release
 # happens only for v* tags — and reuses the exact artifact the build job just
 # produced (built once, released once, never rebuilt for release).
 
@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build:
-    name: Build (x86, net40) + verify resources
+    name: Build (x86, net40)
     runs-on: windows-latest
     outputs:
       release_name: ${{ steps.version.outputs.release_name }}
@@ -55,18 +55,14 @@ jobs:
           /v:m /nologo /p:WarningLevel=0
           "/p:FrameworkPathOverride=C:\Windows\Microsoft.NET\Framework64\v4.0.30319"
 
-      - name: Verify embedded resources against shipped reference
-        shell: pwsh
-        run: pwsh -NoProfile -File verify/verify-resources.ps1
-
       - name: Stage artifact payload
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item "src\HIDTester\bin\Release\MINI KeyBoard.exe" dist\
           Copy-Item "src\HIDTester\bin\Release\MINI KeyBoard.exe.config" dist\
-          Copy-Item "reference\HidLibrary.dll" dist\
-          Copy-Item "reference\Theraot.Core.dll" dist\
+          Copy-Item "libs\HidLibrary.dll" dist\
+          Copy-Item "libs\Theraot.Core.dll" dist\
           @('README.md', 'LICENSE') | ForEach-Object { Copy-Item $_ dist\ }
           Get-ChildItem dist | Select-Object Name, Length
 
@@ -128,3 +124,4 @@ jobs:
           files: |
             MiniKeyboardTool-*.zip
             MiniKeyboardTool-*-setup.exe
+

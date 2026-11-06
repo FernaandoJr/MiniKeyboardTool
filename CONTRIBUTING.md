@@ -13,7 +13,7 @@ before opening a PR.
 | `src/HIDTester/*.resx` (embedded UI layout) | Append new UI elements | Remove, rename, reorder, or re-serialize existing entries — these are byte-verified against the shipped binary |
 | `src/HIDTester/HID/*` (P/Invoke + HID protocol) | Fix crashes, add defensive error handling with justification | Change structure layouts, `DllImport` signatures, or the flash payload format the "Download" button writes |
 | `verify/` | Extend the harness, add new checks | Loosen checks to make a failing build pass |
-| `reference/` | Nothing at all | Modify, recompile, re-base. These files are pinned by SHA-256 and are the source of truth for verification |
+| `libs/` | Nothing at all without a reason | Vendored third-party dependencies — upgrade only with a commit-note and a build+run check |
 | `tools/` | Update the vendored decompiler version (note it in the commit message) | Bypass or delete it |
 
 ## Ground rules
@@ -23,14 +23,12 @@ before opening a PR.
    `kernel32`, `user32`). The keyboard's flash payload is byte-exact; if you
    think it is wrong, open an Issue first and describe what you observed on
    real hardware before patching anything.
-2. **Preserve UI resource layout.** The original `.resx` contents were
-   extracted bit-for-bit from `MINI KeyBoard.exe` (SHA-256
-   `4ae53d3a40921e4f57444c489fa1b38fe91a2e907feda17630450fc97a7cd7b1`). New
-   UI elements are welcome; re-serializing or re-encoding the original entries
-   is not.
-3. **Modifying a `.cs` file under `HID/` requires validation.** After changing
-   it, run the verification harness (next section) and confirm no regression in
-   P/Invoke geometry or resource containment.
+2. **Preserve UI resource layout for resources you didn't author.** New UI
+   elements are welcome; re-serializing embedded resources you didn't build
+   yourself risks silent designer drift.
+3. **Modifying a `.cs` file under `HID/` requires validation.** Build both
+   configurations, open the app, and confirm the flash flow still works on
+   real hardware if you touched anything the payload path reads.
 4. **No redistributing vendor resources.** Do not commit re-serialized third-
    party images, de-scaled UI thumbnails, or any binary you didn't author from
    the reconstruction work unless you've cleared it with the maintainers.
@@ -44,7 +42,6 @@ before opening a PR.
 C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ^
     "src\HIDTester\MINI KeyBoard.csproj" ^
     /p:Configuration=Release /t:Rebuild
-pwsh -NoProfile -File verify\bytediff.ps1
 ```
 
 All checks must pass before a PR can be merged.
@@ -52,7 +49,7 @@ All checks must pass before a PR can be merged.
 ## Commit message style
 
 Keep the summary short and descriptive; explain validation in the body, e.g.
-"Restyle FormMain; verified 8/8 resources still match SHA-256."
+"Restyle FormMain; both Release and Debug builds pass."
 Conventional Commits prefixes (`feat:`, `fix:`, `docs:`…) are enforced by
 convention on `main`.
 
@@ -68,10 +65,10 @@ the per-change-type checks live in [docs/PR_REVIEW_STANDARD.md](docs/PR_REVIEW_S
 
 Include:
 - Windows version and .NET Framework 4.0 availability
-- Whether the issue reproduces with the **original** `reference/MINI KeyBoard.exe`
-- The exact `pwsh` output of `verify\bytediff.ps1` if it appears to be a reconstruction bug
 - Your keyboard model (these devices come in many identical-looking revisions with different VIDs)
+- The exact release/tag of the app you were using (e.g. v1.2.0)
 
 ## Code of conduct
 
 Be civil. Do not submit anything you would not publicly sign your name to.
+

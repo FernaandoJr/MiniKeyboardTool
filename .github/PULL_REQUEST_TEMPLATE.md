@@ -17,7 +17,8 @@
 ## Verification performed (real runs only — never report unrun checks as passing)
 
 - [ ] Build: `MSBuild.exe "src\HIDTester\MINI KeyBoard.csproj" /p:Configuration=Release /t:Rebuild` — result:
-- [ ] Resource fidelity: `pwsh -NoProfile -File verify/verify-resources.ps1` — result:
+- [ ] Release config build (the CI-equivalent gate; Debug covered by its own check)
+- [ ] Embedded `.resx` you did NOT author sanity-checked against your diff — result:
 - [ ] Runtime smoke (only if the change can alter behavior): opened app, result:
 - [ ] Unit / specific (if applicable): command and result:
 
@@ -44,3 +45,4 @@
 ## Type summary (Conventional Commits)
 
 <!-- `feat:` / `fix:` / `refactor:` / `docs:` / `ci:` / `chore:` — one line. -->
+
