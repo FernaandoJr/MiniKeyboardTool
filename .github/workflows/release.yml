@@ -49,6 +49,7 @@ jobs:
           Copy-Item "src\HIDTester\bin\Release\MINI KeyBoard.exe" dist\
           Copy-Item "src\HIDTester\bin\Release\MINI KeyBoard.exe.config" dist\
           Copy-Item "reference\HidLibrary.dll" dist\
+          Copy-Item "reference\Theraot.Core.dll" dist\
           @('README.md', 'LICENSE') | ForEach-Object { Copy-Item $_ dist\ }
           Get-ChildItem dist | Select-Object Name, Length
 

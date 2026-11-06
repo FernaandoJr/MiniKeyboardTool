@@ -91,11 +91,17 @@ C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ^
 Output: `src\HIDTester\bin\Release\MINI KeyBoard.exe` — **x86 / .NET 4.0**, no installer,
 no runtime dependencies other than the framework and `HidLibrary.dll`.
 
-## Using the app
+## Running the app
 
 Plug the mini keyboard, launch the EXE (status bar shows `Connected`). Select the
 function per key per layer (`KEY` / `Ctrl Shift Alt` / `Multimedia` / `LED` /
 `Mouse` menu) and press **Download** to flash the key configuration over USB HID.
+
+No installer is needed. The EXE is portable but keeps two dependencies beside it —
+`HidLibrary.dll` and `Theraot.Core.dll` (the latter is HidLibrary's own shim) —
+plus `MINI KeyBoard.exe.config`. Every tagged release on GitHub ships a zip
+containing all of them; unzip anywhere on a modern Windows (built-in .NET 4.8
+covers the v4.0 target) and run.
 
 ## Re-running verification
 
