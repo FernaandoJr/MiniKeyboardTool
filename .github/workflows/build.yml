@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  SOLUTION_PATH: "src/HIDTester/MINI KeyBoard.csproj"
+
+jobs:
+  build:
+    name: Build (x86, net40) + verify resources
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x86
+
+      - name: Build (Release, Rebuild)
+        run: >
+          msbuild "src\HIDTester\MINI KeyBoard.csproj"
+          /p:Configuration=Release /t:Rebuild /m
+          /v:m /nologo
+          /p:WarningLevel=0
+
+      - name: Verify embedded resources against shipped reference
+        shell: pwsh
+        run: pwsh -NoProfile -File verify/verify-resources.ps1
+
+      - name: Upload built EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: MINI-KeyBoard-exe
+          path: |
+            src/HIDTester/bin/Release/MINI KeyBoard.exe
+            src/HIDTester/bin/Release/*.config
+          if-no-files-found: error

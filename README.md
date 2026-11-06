@@ -2,6 +2,11 @@
 
 > Mini keyboard firmware tool for the generic Chinese 3-key macro keyboard.
 
+[![build status](https://github.com/FernaandoJr/MiniKeyboardTool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/FernaandoJr/MiniKeyboardTool/actions/workflows/build.yml)
+[![License: MIT (reconstruction work)](https://img.shields.io/badge/license-MIT--reconstruction-blue)](LICENSE)
+[![Engineering: ILSpy + REA](https://img.shields.io/badge/toolchain-ILSpy%20%2B%20REA-orange)](#overview)
+[![Platform: Windows via MSBuild 4.0](https://img.shields.io/badge/platform-Windows%20MSBuild%204.0-lightgrey)](#building)
+
 ## Overview
 
 A faithful source reconstruction of **`MINI KeyBoard.exe`** (internal product name
