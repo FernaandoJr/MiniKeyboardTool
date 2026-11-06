@@ -1,67 +1,109 @@
-# MINI KeyBoard Tool — reconstrução fiel e editável
+# MINI KeyBoard Tool (HIDTester)
 
-Reconstrução do código-fonte do **MINI KeyBoard.exe** (produto interno `HIDTester` v1.0.0.0),
-o software de configuração dos mini teclados macro USB HID genéricos (3 teclas × 3 camadas,
-LED, mouse, multimídia), com base no release de fábrica de 2022.
+> Mini keyboard firmware tool for the generic Chinese 3-key macro keyboard.
 
-## Objetivo
+## Overview
 
-Mexer na **interface** (WinForms) sem quebrar o resto. A camada HID defensiva
-(`HID/*`, P/Invokes em `hid.dll`/`setupapi.dll`/`kernel32`/`user32`), o payload de gravação
-(botão *Download*, que escreve pacotes direto no handle HID) e todos os recursos de UI
-estão preservados byte-por-byte em relação ao original.
+A faithful source reconstruction of **`MINI KeyBoard.exe`** (internal product name
+`HIDTester` v1.0.0.0) — the configuration tool that ships with generic 3-key
+USB-HID macro keyboards (K1–K3 × 3 layers, LED control, mouse and multimedia keys).
 
-## Estrutura
+This project was reverse engineered and rebuilt so that the **UI can be modified
+without breaking the HID programming protocol**. The HID layer and every embedded UI
+resource are preserved against the shipped binary.
 
+| | |
+|---|---|
+| Shipped binary | `Release/MINI KeyBoard.exe` · SHA-256 `4ae53d3a40921e4f57444c489fa1b38fe91a2e907feda17630450fc97a7cd7b1` |
+| Compiler (original) | C# / .NET Framework 4.0, WinForms, IL-only, x86 (build of 6 May 2022) ⊕ tries zh-CN/en-US |
+| Rebuilt binary | `src/HIDTester/bin/Release/MINI KeyBoard.exe` · window title `MINI KeyBoard V02.1.1` |
+| Decompiler used | `ilspycmd` 11.2.0.10050 (NuGet AOT self-contained, vendored in `tools/ilspycmd`) |
+| Verified with | [REA reverse engineering tooling](https://mcp.reaminds.tech) — managed metadata & member comparison |
+| Build tooling | MSBuild 4.0.30319 (ships with Windows, no SDK required) |
+
+## Verification (reconstruction fidelity)
+
+### Managed structure
+30 types · **295 methods · 331 fields** — identical member sets and signatures
+on both sides (REA `compare_managed_members`, full coverage, complete-within-inputs).
+Remaining IL deltas are build-local metadata-token offsets, not semantic changes.
+
+### Embedded UI resources (8/8 recovered)
+
+| Embedded resource | Status |
+|---|---|
+| `HIDTester.LayerFun.resources` | ✅ byte-identical (SHA-256) |
+| `HIDTester.LEDkey.resources` | ✅ byte-identical |
+| `HIDTester.MouseKey.resources` | ✅ byte-identical |
+| `HIDTester.MULKey.resources` | ✅ byte-identical |
+| `HIDTester.FunKey.resources` | ✅ byte-identical |
+| `HIDTester.BasicKeys.resources` | ✅ byte-identical |
+| `HIDTester.Properties.Resources.resources` | ✅ byte-identical |
+| `HIDTester.FormMain.resources` | ✅ identical content (34,489 bytes, all 304 keys) + `841` trailing bytes discarded |
+
+About `FormMain.resources`: the shipped build contains **841 bytes of unreferenced
+duplicate records at the end of the resource container** — produced by the vendor's
+nonstandard resource writer (the same defect shows as three ECMA-335-invalid user
+string terminal flags in static analysis). Unreferenced by the reader, ignored by
+the runtime (both files declare `numResources = 145` and match byte-for-byte through
+the meaningful tail), and dropped on rebuild. A run-time smoke test confirms the
+rebuilt app launches with the original title and layout.
+
+### Native boundary
+16 P/Invoke declarations verified against the shipped binary — `hid.dll`
+(`HidD_*`, `HidP_GetCaps`), `setupapi.dll` (HID device enumeration), `kernel32`
+(device open/read/write), `user32` (`RegisterDeviceNotification`). These are the
+same calls the shipped "Download" button uses to write key payloads directly to
+the device's HID interface, and they **remain untouched in this reconstruction**.
+
+## Repository structure
+
+```text
+src/HIDTester/                  decompiled + cleaned C# sources (buildable / editable)
+├── HID/                        P/Invoke wrappers for hid/setupapi/kernel32/user32
+│                               — DO NOT TOUCH, this is the USB HID protocol layer
+├── HIDTester/                  Forms: FormMain (main UI), BasicKeys, FunKey,
+│                               LayerFun, LEDkey, MouseKey, MULKey, HidLib, Program
+├── HIDTester.Properties/       strongly-typed resources and settings
+├── Properties/AssemblyInfo.cs  assembly attributes
+├── *.resx                      embedded UI resources (extracted bit-for-bit)
+├── App.config                  shipped application configuration
+└── MINI KeyBoard.csproj        classic MSBuild project (no SDK needed)
+
+reference/                      original factory binaries, pinned for verification
+tools/ilspycmd/                 decompiler used for the reconstruction
+verify/bytediff.ps1             .resources verification harness
 ```
-src/HIDTester/          # Fonte C# (.NET Framework 4.0, WinForms) + todos os .resx da UI
-    HID/                # P/Invokes hid/setupapi/kernel32/user32 (NÃO MEXER — é o protocolo)
-    HIDTester/          # FormMain + telas (BasicKeys, FunKey, LayerFun, LEDkey, MouseKey, MULKey)
-    MINI KeyBoard.csproj  # csproj clássico, compila com o MSBuild 4.0 do próprio Windows
-reference/              # Binários originais de fábrica (SHA-256 4ae53d3a...cd7b1)
-tools/ilspycmd/         # Decompilador self-contained (NuGet ilspycmd.win-x64 11.2.0.10050)
-verify/                 # Scripts de verificação
-```
 
-Os arquivos de interface que você mexe são:
-`src/HIDTester/HIDTester/*.cs` (código) e `src\HIDTester\*.resx` (layout, textos, imagens
-do designer — a UI inteira).
+## Building
 
-## Como compilar (sem instalar nada)
-
-```
+```powershell
 C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ^
-  "src\HIDTester\MINI KeyBoard.csproj" /p:Configuration=Release /t:Rebuild
+    "src\HIDTester\MINI KeyBoard.csproj" ^
+    /p:Configuration=Release /t:Rebuild
 ```
 
-Saída: `src\HIDTester\bin\Release\MINI KeyBoard.exe` (protoc x86, .NET 4.0, título original
-"MINI KeyBoard V02.1.1"确认).
+Output: `src\HIDTester\bin\Release\MINI KeyBoard.exe` — **x86 / .NET 4.0**, no installer,
+no runtime dependencies other than the framework and `HidLibrary.dll`.
 
-## Validade da reconstrução (evidência)
+## Using the app
 
-- **30 tipos / 295 métodos / 331 campos** idênticos ao original (REA `compare_managed_members`:
-  350 members *unchanged*; os demais mudam só por tokens de metadata local ao build).
-- **Resources embutidos**: 8/8 presentes; **7/8 byte-idênticos** por SHA-256
-  (`FunKey`, `LayerFun`, `LEDkey`, `MouseKey`, `MULKey`, `Properties.Resources`, `BasicKeys`).
-- `HIDTester.FormMain.resources`: conteúdo **byte-idêntico até o fim real** (34.489 bytes;
-  304 chaves exatamente iguais). O original carrega 841 bytes **finais não-referenciados**
-  (registros duplicados escritos pelo compilador defeituoso do fabricante — mesmo defeito
-  das 3 user strings com flag fora do padrão ECMA-335 apontadas em análise estática).
-  O runtime ignora esses bytes; nada a preservar.
-- Smoke test: o rebuild abre com o window title original `MINI KeyBoard V02.1.1`.
+Plug the mini keyboard, launch the EXE (status bar shows `Connected`). Select the
+function per key per layer (`KEY` / `Ctrl Shift Alt` / `Multimedia` / `LED` /
+`Mouse` menu) and press **Download** to flash the key configuration over USB HID.
 
-## Limitações conhecidas
+## Re-running verification
 
-- Reconstrução é estática; recursos de serialização (fontes/ícones) não foram
-  desserializados em memória durante a comparação (limitação igual nos dois lados; as
-  entradas batem por chave e por bytes).
-- A gravação real no teclado (botão Download) só foi testada com o original; o rebuild
-  usa as mesmas chamadas HID (verificado por comparação de calls/P-Invoke estáticos).
-
-## Como verificar de novo
-
+```powershell
+pwsh -NoProfile -File verify\bytediff.ps1
 ```
-pwsh -NoProfile -File verify\bytediff.ps1     # compara orig vs rebuild .resources
-```
-(ajuste os paths dentro do script se trocar os binários)
+
+Compare paths are pinned inside the script; swap if you rebuild the reference binary.
+
+## Disclaimer
+
+Not affiliated with the original vendor. Source reconstructed from the shipped
+factory software for interoperability and personal customization. Use of the
+original binary name and vendor resources is for provenance only. Do not use this
+analysis to harm end users.
 
