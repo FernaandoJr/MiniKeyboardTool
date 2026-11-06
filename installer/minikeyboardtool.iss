@@ -38,8 +38,11 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; \
     GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Everything the portable layout needs: EXE + config + HidLibrary + Theraot
-Source: "..\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+; Everything the portable layout needs: EXE + config + HidLibrary + Theraot.
+; Excludes the setup EXE and the release ZIP themselves — ISCC would deadlock
+; trying to compress the very file it is writing.
+Source: "..\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs; \
+    Excludes: "MiniKeyboardTool-*-setup.exe,MiniKeyboardTool-*.zip,*.issig"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
