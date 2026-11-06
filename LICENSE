@@ -33,9 +33,9 @@ It does NOT cover, and does not grant any rights over, materials that
 continue under their own rights unless the original vendor authorizes
 redistribution:
 
-  * The binaries in the reference/ directory
-    (the shipped factory build "MINI KeyBoard.exe" / "HIDTester" and
-    HidLibrary.dll), which remain the property of the original vendor.
+  * The vendored third-party binaries under libs/ (HidLibrary.dll,
+    Theraot.Core.dll), which remain under their own upstream terms (HidLibrary
+    is MIT: https://github.com/mikeobu/HidLibrary and is intact).
   * The original vendor's embedded resources and any UI assets carried
     verbatim from the shipped binary into src/HIDTester/*.resx.
   * Third-party libraries vendored in tools/ (ilspycmd is distributed
@@ -44,3 +44,4 @@ redistribution:
 If you redistribute this project, you must remove or obtain permission for
 any of the above vendor-owned material, or ship only the parts this project
 itself authored.
+

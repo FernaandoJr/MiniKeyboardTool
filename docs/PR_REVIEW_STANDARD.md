@@ -103,3 +103,4 @@ pretend a question wasn't asked.
 - Security, privacy, or transmission-layer questions (`HID/`, HTTP, config) get
   one extra pass: a stated negative must say what the author checked (e.g.,
   "no unhandled InvokeResult is written anywhere").
+
