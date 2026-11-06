@@ -100,6 +100,31 @@ pwsh -NoProfile -File verify\bytediff.ps1
 
 Compare paths are pinned inside the script; swap if you rebuild the reference binary.
 
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR — code changes must
+preserve the **USB HID protocol layer**, the **UI layout resources**, and must pass
+the verification harness:
+
+```powershell
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ^
+    "src\HIDTester\MINI KeyBoard.csproj" ^
+    /p:Configuration=Release /t:Rebuild
+pwsh -NoProfile -File verify\bytediff.ps1
+```
+
+## License
+
+Split license, as is standard for reconstruction projects:
+
+- The **reconstruction work itself** (cleaned/edited C# sources, build files,
+  verification scripts, documentation) is licensed under the
+  [MIT License](LICENSE).
+- The **shipped factory binaries** in `reference/` and the vendor's originally
+  embedded UI resources **are not** covered by the MIT grant; they remain under
+  the original vendor's terms unless the vendor authorizes redistribution.
+  See the "Scope of this license" section in the LICENSE file.
+
 ## Disclaimer
 
 Not affiliated with the original vendor. Source reconstructed from the shipped
