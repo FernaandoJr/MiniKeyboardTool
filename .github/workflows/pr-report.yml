@@ -1,0 +1,85 @@
+# Enforces the PR governance conventions for every pull request:
+#   1. Title follows Conventional Commits (type: summary or type(scope): summary).
+#   2. The PR body is a filled report — all mandatory sections of
+#      .github/PULL_REQUEST_TEMPLATE.md present, with at least one committed
+#      checkbox, and a substantive "Internal review of this diff" section
+#      (the five numbered items must have non-empty answers).
+# Fails with actionable messages instead of a bare "check failed".
+
+name: pr-report
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  report:
+    name: PR title + report completeness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch PR metadata
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr view "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" \
+            --json title,body --jq '{title: .title, body: .body}' | tee pr.json
+
+      - name: Conventional Commits title
+        run: |
+          title=$(jq -r .title pr.json)
+          if ! echo "$title" | grep -Eq '^(feat|fix|refactor|docs|ci|chore|deps)(\([^)]+\))?!?: .+'; then
+            echo "::error::PR title must follow Conventional Commits: 'type: summary' or 'type(scope): summary'"
+            echo "        allowed types: feat, fix, refactor, docs, ci, chore, deps"
+            echo "        got: \"$title\""
+            exit 1
+          fi
+          echo "title OK: $title"
+
+      - name: Report sections present
+        run: |
+          body=$(jq -r .body pr.json)
+          fail=0
+          for section in "## Plan" "## What changed" "## Verification performed" "## Internal review of this diff" "## Type summary"; do
+            if ! echo "$body" | grep -Fq "$section"; then
+              echo "::error::PR body is missing the required section: '$section' (see .github/PULL_REQUEST_TEMPLATE.md)"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Verification actually committed
+        run: |
+          body=$(jq -r .body pr.json)
+          checked=$(echo "$body" | grep -c '\- \[x\]' || true)
+          if [ "${checked:-0}" -lt 1 ]; then
+            echo "::error::'Verification performed' must contain at least one checked box ('- [x]')."
+            echo "        Never report an unrun check as passing — run the command, then check the box."
+            exit 1
+          fi
+
+      - name: Internal review has the five answers
+        run: |
+          body=$(jq -r .body pr.json)
+          section=$(echo "$body" | awk '/## Internal review of this diff/{flag=1;next}/^## /{flag=0}flag')
+          missing=0
+          for n in 1 2 3 4 5; do
+            line=$(echo "$section" | grep -E "^$n\." | tail -1)
+            if [ -z "$line" ]; then
+              echo "::error::Internal review item '$n.' is missing — answer ALL numbered items ('nothing to flag' is a valid answer when true)."
+              missing=1
+            elif echo "$line" | grep -Eq "^$n\.\s*$"; then
+              echo "::error::Internal review item '$n.' is empty — 'nothing to flag' is fine, silence is not."
+              missing=1
+            fi
+          done
+          if echo "$section" | grep -Eq "^1\.\s*(looks fine|nothing)$"; then
+            echo "::error::'1. looks fine' / 'nothing' alone does not state alignment with the Plan. Be specific."
+            missing=1
+          fi
+          exit $missing
