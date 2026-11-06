@@ -3,3 +3,5 @@ obj/
 *.user
 *.suo
 _tmp/
+dist/
+uploads/
