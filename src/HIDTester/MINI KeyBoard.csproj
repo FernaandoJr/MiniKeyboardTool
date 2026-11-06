@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{830E3432-592A-4FE8-A60E-4E46348E689C}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>HIDTester</RootNamespace>
+    <AssemblyName>MINI KeyBoard</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ApplicationIcon>App.ico</ApplicationIcon>
+    <PlatformTarget>x86</PlatformTarget>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="HidLibrary">
+      <HintPath>..\..\reference\HidLibrary.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="HID\CREATIONDISPOSITION.cs" />
+    <Compile Include="HID\DESIREDACCESS.cs" />
+    <Compile Include="HID\DEV_BROADCAST_DEVICEINTERFACE.cs" />
+    <Compile Include="HID\DEV_BROADCAST_HDR.cs" />
+    <Compile Include="HID\DIGCF.cs" />
+    <Compile Include="HID\FLAGSANDATTRIBUTES.cs" />
+    <Compile Include="HID\HIDD_ATTRIBUTES.cs" />
+    <Compile Include="HID\HIDP_CAPS.cs" />
+    <Compile Include="HID\Hid.cs" />
+    <Compile Include="HID\report.cs" />
+    <Compile Include="HID\SP_DEVICE_INTERFACE_DATA.cs" />
+    <Compile Include="HID\SP_DEVICE_INTERFACE_DETAIL_DATA.cs" />
+    <Compile Include="HID\SP_DEVINFO_DATA.cs" />
+    <Compile Include="HIDTester\AutoSizeFormClass.cs" />
+    <Compile Include="HIDTester\BasicKeys.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\FormMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\FunKey.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\HidLib.cs" />
+    <Compile Include="HIDTester\LayerFun.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\LEDkey.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\MouseKey.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\MULKey.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIDTester\Program.cs" />
+    <Compile Include="HIDTester.Properties\Resources.cs" />
+    <Compile Include="HIDTester.Properties\Settings.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="HIDTester.FormMain.resx">
+      <LogicalName>HIDTester.FormMain.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HIDTester.LayerFun.resx">
+      <LogicalName>HIDTester.LayerFun.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HIDTester.LEDkey.resx">
+      <LogicalName>HIDTester.LEDkey.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HIDTester.MouseKey.resx">
+      <LogicalName>HIDTester.MouseKey.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HIDTester.MULKey.resx">
+      <LogicalName>HIDTester.MULKey.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HIDTester.BasicKeys.resx">
+      <LogicalName>HIDTester.BasicKeys.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HIDTester.FunKey.resx">
+      <LogicalName>HIDTester.FunKey.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <LogicalName>HIDTester.Properties.Resources.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="reference\HidLibrary.pdb" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
