@@ -91,21 +91,23 @@ jobs:
           Get-ChildItem dist | Select-Object Name, Length
 
       - name: Collect uploads
+        if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path uploads | Out-Null
           Move-Item "MiniKeyboardTool-$env:GITHUB_REF_NAME.zip" uploads\ -Force
           Move-Item "dist\MiniKeyboardTool-*-setup.exe" uploads\ -Force
           Get-ChildItem uploads | Select-Object Name, Length
-        if: startsWith(github.ref, 'refs/tags/v')
 
+      # PR runs: the zip stays at the root named commit-<sha>.zip
+      # Tag runs: Collect uploads moved both payloads into uploads/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: |
             MiniKeyboardTool-*.zip
-            MiniKeyboardTool-*-setup.exe
+            uploads/*
           if-no-files-found: error
 
   release:
