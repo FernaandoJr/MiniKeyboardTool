@@ -284,7 +284,7 @@ namespace HIDTester
 			case "LED":
 			{
 				splitContainer1.Panel2.Controls.Clear();
-				LEDkey lEDkey = new LEDkey();
+				LEDkey lEDkey = new LEDkey(this);
 				lEDkey.Parent = splitContainer1.Panel2;
 				lEDkey.Dock = DockStyle.Fill;
 				lEDkey.Show();
@@ -588,6 +588,51 @@ namespace HIDTester
 					label4.BackColor = backColor;
 					Show_Dowload_Text();
 				}
+			}
+		}
+
+		/// <summary>
+		/// LED Lab apply path (added feature): sends the live-verified LED frame
+		/// [0xB0, 0x08, colour|mode] through the factory write path and then the
+		/// LED flash commit [AA A1 ...]. ReportId 3 is the channel the HID stack
+		/// accepts for this device (report ids 0 and 2 are rejected with 1168).
+		/// </summary>
+		public void ExecuteLedWrite(byte combo)
+		{
+			byte[] array = new byte[65];
+			array[0] = 176;
+			array[1] = 8;
+			array[2] = combo;
+			if (WriteMode == 0)
+			{
+				report r = new report(KeyParam.ReportID, array);
+				myHid.Write(r);
+			}
+			else if (WriteMode == 1)
+			{
+				myHidLib.WriteDevice(KeyParam.ReportID, array);
+			}
+			Send_WriteFlashLED_Cmd();
+		}
+
+		/// <summary>
+		/// Init handshake ([A1 01], community-documented) sent once before the
+		/// LED Lab's first apply — mirrors the sequence that made colours take
+		/// effect during the live probing.
+		/// </summary>
+		public void SendLedInit()
+		{
+			byte[] array = new byte[65];
+			array[0] = 161;
+			array[1] = 1;
+			if (WriteMode == 0)
+			{
+				report r = new report(KeyParam.ReportID, array);
+				myHid.Write(r);
+			}
+			else if (WriteMode == 1)
+			{
+				myHidLib.WriteDevice(KeyParam.ReportID, array);
 			}
 		}
 
