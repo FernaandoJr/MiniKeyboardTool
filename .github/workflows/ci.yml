@@ -59,11 +59,10 @@ jobs:
         shell: pwsh
         run: |
           $ver = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "commit-$($env:GITHUB_SHA.Substring(0,7))" }
-          $zip = if ($env:GITHUB_REF_TYPE -eq 'tag') { "MiniKeyboardTool-$ver.zip" } else { "MiniKeyboardTool-$ver.zip" }
-          Compress-Archive -Path dist\* -DestinationPath $zip -Force
-          "ZIP_NAME=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "RELEASE_NAME=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Name release_name
-          Get-Item $zip | Select-Object Name, Length
+          Compress-Archive -Path dist\* -DestinationPath "MiniKeyboardTool-$ver.zip" -Force
+          "ZIP_NAME=MiniKeyboardTool-$ver.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "release_name=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Get-Item "MiniKeyboardTool-$ver.zip" | Select-Object Name, Length
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
