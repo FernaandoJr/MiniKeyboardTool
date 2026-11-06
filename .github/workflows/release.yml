@@ -1,0 +1,70 @@
+# Build + create a GitHub Release whenever a version tag is pushed.
+#
+# Usage:
+#   git tag v1.0.0
+#   git push origin v1.0.0
+# -> builds on windows-latest, verifies resources against reference/, then
+#    attaches the built EXE + config to a GitHub Release with auto notes.
+
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # required to create the GitHub Release
+
+jobs:
+  build:
+    name: Build (x86, net40) + verify resources
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x86
+
+      # GH runners ship the .NET 4.8 runtime but no net40 reference assemblies;
+      # compiling against the 4.0.30319 runtime dir reproduces the original
+      # binary's reference set without the retired net40 dev pack.
+      - name: Build (Release, Rebuild)
+        run: >
+          msbuild "src\HIDTester\MINI KeyBoard.csproj"
+          /p:Configuration=Release /t:Rebuild /m
+          /v:m /nologo /p:WarningLevel=0
+          "/p:FrameworkPathOverride=C:\Windows\Microsoft.NET\Framework64\v4.0.30319"
+
+      - name: Verify embedded resources against shipped reference
+        shell: pwsh
+        run: pwsh -NoProfile -File verify/verify-resources.ps1
+
+      - name: Stage release payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "src\HIDTester\bin\Release\MINI KeyBoard.exe" dist\
+          Copy-Item "src\HIDTester\bin\Release\MINI KeyBoard.exe.config" dist\
+          Copy-Item "reference\HidLibrary.dll" dist\
+          @('README.md', 'LICENSE') | ForEach-Object { Copy-Item $_ dist\ }
+          Get-ChildItem dist | Select-Object Name, Length
+
+      - name: Zip payload
+        shell: pwsh
+        run: |
+          $ver = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { 'snapshot' }
+          $zip = "MiniKeyboardTool-$ver.zip"
+          Compress-Archive -Path dist\* -DestinationPath $zip -Force
+          "ZIP_NAME=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Get-Item $zip | Select-Object Name, Length
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: ${{ env.ZIP_NAME }}
