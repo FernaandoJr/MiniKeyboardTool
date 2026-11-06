@@ -85,10 +85,21 @@ pretend a question wasn't asked.
 
 ## Ownership
 
+## Ownership
+
 - The PR author is the owner of the whole change (as in REA-style: code, tests,
   docs, and every claim in the PR body).
 - Automation may suggest and flag; only the named human owner finalizes the
   form and asserts "Internal review done".
+- **Punctual changes may go directly to `main`** (codified by the owner — the
+  ruleset grants the repository admin a bypass for exactly this): typo fixes,
+  badge/URL/description corrections, one-line CI tweaks, reviving a stale
+  README section, or any change whose diff is obvious at a glance and that the
+  author would self-approve in their own PR within a minute. PRs are for
+  *change review*, not ceremony. The list of things that must still go through
+  a PR: anything touching `HID/`, the payloads, the resources, the workflows'
+  required-check chain, and, in general, anything whose review needs the
+  evidence run in CI. When in doubt, the next section's rule applies.
 - Security, privacy, or transmission-layer questions (`HID/`, HTTP, config) get
   one extra pass: a stated negative must say what the author checked (e.g.,
   "no unhandled InvokeResult is written anywhere").
