@@ -53,6 +53,16 @@ All checks must pass before a PR can be merged.
 
 Keep the summary short and descriptive; explain validation in the body, e.g.
 "Restyle FormMain; verified 8/8 resources still match SHA-256."
+Conventional Commits prefixes (`feat:`, `fix:`, `docs:`…) are enforced by
+convention on `main`.
+
+## PR report and internal review
+
+Every PR fills the [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)
+report — including the mandatory **Internal review of this diff** section
+(honest alignment with the plan, real quality findings, and anything
+deliberately left as-is with a reason). The bar, the anti-nitpick rule, and
+the per-change-type checks live in [docs/PR_REVIEW_STANDARD.md](docs/PR_REVIEW_STANDARD.md).
 
 ## Reporting an issue
 
