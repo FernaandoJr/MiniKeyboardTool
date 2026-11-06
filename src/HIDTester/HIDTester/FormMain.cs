@@ -154,6 +154,64 @@ namespace HIDTester
 			Hide_Dowload_Text();
 			LayerFunList();
 			Lanuage_Set_EN();
+			BeginUpdatePoll();
+		}
+
+		/// <summary>
+		/// Silent, once-per-session update check (GitHub Releases API, no
+		/// telemetry). First offered ~5s after the main window is up, and only
+		/// surfaces a Windows notification balloon — never blocks, never
+		/// popups in the face of connectivity problems.
+		/// </summary>
+		private void BeginUpdatePoll()
+		{
+			System.Windows.Forms.Timer onceTimer = new System.Windows.Forms.Timer();
+			onceTimer.Interval = 5000;
+			onceTimer.Tick += delegate(object sender, EventArgs e)
+			{
+				onceTimer.Stop();
+				onceTimer.Dispose();
+				Updater updater = new Updater();
+				updater.BeginCheck(delegate(Updater info)
+				{
+					this.BeginInvoke(new MethodInvoker(delegate()
+					{
+						ShowUpdateBalloon(info);
+					}));
+				});
+			};
+			onceTimer.Start();
+		}
+
+		private void ShowUpdateBalloon(Updater info)
+		{
+			NotifyIcon notifier = new NotifyIcon();
+			notifier.Icon = System.Drawing.SystemIcons.Information;
+			notifier.Visible = true;
+			notifier.BalloonTipTitle = "MiniKeyboardTool update available";
+			notifier.BalloonTipText = "Version " + info.LatestVersionText
+				+ " is available (you have "
+				+ System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + ")."
+				+ (info.SetupDownloadUrl != null ? " Click here to download and install." : "");
+			if (info.SetupDownloadUrl != null)
+			{
+				notifier.BalloonTipClicked += delegate(object sender, EventArgs e)
+				{
+					info.RunSetup();
+				};
+			}
+			notifier.ShowBalloonTip(10000);
+			System.Windows.Forms.Timer cleanupTimer = null;
+			cleanupTimer = new System.Windows.Forms.Timer();
+			cleanupTimer.Interval = 15000;
+			cleanupTimer.Tick += delegate(object sender2, EventArgs e2)
+			{
+				cleanupTimer.Stop();
+				cleanupTimer.Dispose();
+				notifier.Visible = false;
+				notifier.Dispose();
+			};
+			cleanupTimer.Start();
 		}
 
 		private void MenuList()
