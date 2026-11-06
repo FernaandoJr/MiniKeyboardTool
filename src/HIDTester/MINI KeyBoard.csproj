@@ -79,6 +79,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="HIDTester\Program.cs" />
+    <Compile Include="HIDTester\Updater.cs" />
     <Compile Include="HIDTester.Properties\Resources.cs" />
     <Compile Include="HIDTester.Properties\Settings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

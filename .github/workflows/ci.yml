@@ -44,6 +44,20 @@ jobs:
         shell: pwsh
         run: pwsh -NoProfile -File verify/verify-resources.ps1
 
+      # Only on release tags: stamp the assembly version from the tag so
+      # `Updater` compares against the exact released version.
+      - name: Stamp assembly version from tag (releases only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $ver = $env:GITHUB_REF_NAME.TrimStart("v")
+          $file = "src\HIDTester\Properties\AssemblyInfo.cs"
+          (Get-Content $file -Raw) `
+            -replace 'AssemblyVersion\(".*?"\)', ('AssemblyVersion("' + $ver + '")') `
+            -replace 'AssemblyFileVersion\(".*?"\)', ('AssemblyFileVersion("' + $ver + '")') `
+            | Set-Content $file -NoNewline
+          Get-Content $file | Select-String "AssemblyVersion"
+
       - name: Stage artifact payload
         shell: pwsh
         run: |
@@ -64,11 +78,33 @@ jobs:
           "release_name=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           Get-Item "MiniKeyboardTool-$ver.zip" | Select-Object Name, Length
 
+      # Build the setup EXE with the vendored Inno Setup 7 compiler.
+      # Reads dist\MINI KeyBoard.exe for the version — so this runs after
+      # both the stamping and the staging steps above.
+      - name: Compile installer (Inno Setup)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          & "tools\innosetup\ISCC.exe" "installer\minikeyboardtool.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem dist | Select-Object Name, Length
+
+      - name: Collect uploads
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path uploads | Out-Null
+          Move-Item "MiniKeyboardTool-$env:GITHUB_REF_NAME.zip" uploads\ -Force
+          Move-Item "dist\MiniKeyboardTool-*$env:GITHUB_REF_NAME-setup.exe" uploads\ -Force
+          Get-ChildItem uploads | Select-Object Name, Length
+        if: startsWith(github.ref, 'refs/tags/v')
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: ${{ env.ZIP_NAME }}
+          path: |
+            MiniKeyboardTool-*.zip
+            MiniKeyboardTool-*-setup.exe
           if-no-files-found: error
 
   release:
@@ -82,10 +118,12 @@ jobs:
         with:
           name: build-output
 
-      - name: Create GitHub Release with built zip
+      - name: Create GitHub Release with built payload
         uses: softprops/action-gh-release@v2
         with:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
-          files: build-output/*.zip
+          files: |
+            MiniKeyboardTool-*.zip
+            MiniKeyboardTool-*-setup.exe
