@@ -90,24 +90,22 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-ChildItem dist | Select-Object Name, Length
 
+      # Merge every release payload into uploads/ with a single flat level:
+      # the zip (tag name on tags, commit-<sha> name on PRs) and, when it
+      # exists, the setup EXE from dist/.
       - name: Collect uploads
-        if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path uploads | Out-Null
-          Move-Item "MiniKeyboardTool-$env:GITHUB_REF_NAME.zip" uploads\ -Force
-          Move-Item "dist\MiniKeyboardTool-*-setup.exe" uploads\ -Force
+          Get-ChildItem -File -Filter "MiniKeyboardTool-*.zip" | Move-Item -Destination uploads\ -Force
+          Get-ChildItem dist -File -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Move-Item -Destination uploads\ -Force
           Get-ChildItem uploads | Select-Object Name, Length
 
-      # PR runs: the zip stays at the root named commit-<sha>.zip
-      # Tag runs: Collect uploads moved both payloads into uploads/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: |
-            MiniKeyboardTool-*.zip
-            uploads/*
+          path: uploads/*
           if-no-files-found: error
 
   release:
