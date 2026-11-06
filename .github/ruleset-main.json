@@ -18,7 +18,8 @@
       "allowed_merge_methods": ["merge", "squash", "rebase"] } },
     { "type": "required_status_checks", "parameters": {
       "strict_required_status_checks_policy": true,
-      "required_status_checks": [ { "context": "Build (x86, net40) + verify resources", "integration_id": 15368 } ] } }
+      "required_status_checks": [ { "context": "Build (x86, net40)", "integration_id": 15368 } ] } }
   ]
 }
+
 
