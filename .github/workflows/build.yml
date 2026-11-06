@@ -23,12 +23,16 @@ jobs:
         with:
           msbuild-architecture: x86
 
+      # GH-hosted runners ship .NET Framework 4.8 runtime but no net40 reference
+      # assemblies. Compiling against the 4.0.30319 runtime dir (same
+      # mscorlib/System.Windows.Forms the framework itself loads) reproduces the
+      # original binary's reference set without needing the retired net40 dev pack.
       - name: Build (Release, Rebuild)
         run: >
           msbuild "src\HIDTester\MINI KeyBoard.csproj"
           /p:Configuration=Release /t:Rebuild /m
-          /v:m /nologo
-          /p:WarningLevel=0
+          /v:m /nologo /p:WarningLevel=0
+          "/p:FrameworkPathOverride=C:\Windows\Microsoft.NET\Framework64\v4.0.30319"
 
       - name: Verify embedded resources against shipped reference
         shell: pwsh
