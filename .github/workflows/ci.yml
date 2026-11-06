@@ -30,6 +30,21 @@ jobs:
         with:
           msbuild-architecture: x86
 
+      # Only on release tags: stamp the assembly version from the tag so
+      # `Updater` compares against the exact released version. Must run
+      # BEFORE the build itself.
+      - name: Stamp assembly version from tag (releases only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $ver = "$($env:GITHUB_REF_NAME.TrimStart("v"))"
+          $file = "src\HIDTester\Properties\AssemblyInfo.cs"
+          (Get-Content $file -Raw) `
+            -replace 'AssemblyVersion\(".*?"\)', ('AssemblyVersion("' + $ver + '")') `
+            -replace 'AssemblyFileVersion\(".*?"\)', ('AssemblyFileVersion("' + $ver + '")') `
+            | Set-Content $file -NoNewline
+          Get-Content $file | Select-String "AssemblyVersion"
+
       # GH runners ship the .NET 4.8 runtime but no net40 reference assemblies;
       # compiling against the 4.0.30319 runtime dir reproduces the original
       # binary's reference set without the retired net40 dev pack.
@@ -43,20 +58,6 @@ jobs:
       - name: Verify embedded resources against shipped reference
         shell: pwsh
         run: pwsh -NoProfile -File verify/verify-resources.ps1
-
-      # Only on release tags: stamp the assembly version from the tag so
-      # `Updater` compares against the exact released version.
-      - name: Stamp assembly version from tag (releases only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: |
-          $ver = $env:GITHUB_REF_NAME.TrimStart("v")
-          $file = "src\HIDTester\Properties\AssemblyInfo.cs"
-          (Get-Content $file -Raw) `
-            -replace 'AssemblyVersion\(".*?"\)', ('AssemblyVersion("' + $ver + '")') `
-            -replace 'AssemblyFileVersion\(".*?"\)', ('AssemblyFileVersion("' + $ver + '")') `
-            | Set-Content $file -NoNewline
-          Get-Content $file | Select-String "AssemblyVersion"
 
       - name: Stage artifact payload
         shell: pwsh
@@ -94,7 +95,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path uploads | Out-Null
           Move-Item "MiniKeyboardTool-$env:GITHUB_REF_NAME.zip" uploads\ -Force
-          Move-Item "dist\MiniKeyboardTool-*$env:GITHUB_REF_NAME-setup.exe" uploads\ -Force
+          Move-Item "dist\MiniKeyboardTool-*-setup.exe" uploads\ -Force
           Get-ChildItem uploads | Select-Object Name, Length
         if: startsWith(github.ref, 'refs/tags/v')
 
